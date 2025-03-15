@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "minio": "^8.0.5"
+  },
+  "devDependencies": {
+    "@types/minio": "^7.1.1"
+  }
+}
