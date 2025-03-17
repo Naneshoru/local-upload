@@ -4,7 +4,7 @@ import fs from 'fs'
 
 // Retorna um stream do objeto armazenado no MinIO.
 
-async function getFileStream (minioClient, filePath) {
+async function getFileFromS3 (minioClient, filePath) {
   const stream = await minioClient.getObject(bucket, 'user_profile.jpeg');
   
   const writeStream = fs.createWriteStream(filePath);
@@ -17,19 +17,9 @@ async function getFileStream (minioClient, filePath) {
   return stream
 }
 
-// Faz o download do arquivo diretamente para um arquivo no disco local.
-/**
- * 
- * @param {*} objectPath 'user_profile.jpeg'
- * @param {*} downloadPath '/files/my_profile.jpeg'
- */
-async function saveInDisk (minioClient, objectPath, downloadPath) {
-  await minioClient.fGetObject(bucket, objectPath, downloadPath)
-}
-
-async function signUrl (minioClient, bucket, objectName, expirationTime) {
+async function getFileLinkToS3 (minioClient, bucket, objectName, expirationTime) {
   const downloadLink = await minioClient.presignedUrl('GET', bucket, objectName, expirationTime);
   return downloadLink
 }
 
-export { getFileStream, saveInDisk, signUrl }
+export { getFileFromS3, getFileLinkToS3 }

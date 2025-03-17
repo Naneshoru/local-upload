@@ -1,21 +1,19 @@
-import { Client } from 'minio'
 import dotenv from 'dotenv'
-import { signUrl } from './utils.js'
-
 dotenv.config()
+import config from './config.js'
+import { Client } from 'minio'
 
 const minioClient = new Client({
-  endPoint: 'localhost',
-  port: 9000,
-  useSSL: false,
-  accessKey: process.env.ACCESS_KEY,
-  secretKey: process.env.SECRET_KEY,
-  region: 'us-east-1'
+  endPoint: config().s3.endPoint,
+  port: config().s3.port,
+  useSSL: config().s3.ssl,
+  accessKey: config().s3.accessKey,
+  secretKey: config().s3.secretKey,
+  region: config().s3.region
 })
 
+const bucket = config().s3.bucketName
 const sourceFile = './files/profile.jpeg'
-
-const bucket = 'personal-bucket'
 
 /** Listar */
 const log = await minioClient.listBuckets()
@@ -36,17 +34,16 @@ const metaData = {
   example: 5678,
 }
 
-const objectName = 'user_profile.jpeg'
-const expirationTime = 24 * 60 * 60 // 24 hours
-const url = await signUrl(minioClient, bucket, objectName, expirationTime)
-console.log('url', url)
-
 /** Upload */
 // await minioClient.fPutObject(bucket, destinationObject, sourceFile, metaData)
 
 // console.log('File ' + sourceFile + ' uploaded as object ' + destinationObject + ' in bucket ' + bucket)
 
-
+/** Sign */
+const objectName = 'user_profile.jpeg'
+const expirationTime = 24 * 60 * 60 // 24 hours
+const url = await getFileLinkToS3(minioClient, bucket, objectName, expirationTime)
+console.log('url', url)
 
 
 
