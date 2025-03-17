@@ -22,4 +22,8 @@ async function getFileLinkToS3 (minioClient, bucket, objectName, expirationTime)
   return downloadLink
 }
 
-export { getFileFromS3, getFileLinkToS3 }
+async function removeFileInS3 (minioClient, bucket, objectName) {
+  await minioClient.removeObject(bucket, objectName)
+}
+
+export { getFileFromS3, getFileLinkToS3, removeFileInS3 }

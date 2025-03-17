@@ -2,6 +2,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 import config from './config.js'
 import { Client } from 'minio'
+import fs from 'fs'
+
 
 const minioClient = new Client({
   endPoint: config().s3.endPoint,
@@ -13,7 +15,6 @@ const minioClient = new Client({
 })
 
 const bucket = config().s3.bucketName
-const sourceFile = './files/profile.jpeg'
 
 /** Listar */
 const log = await minioClient.listBuckets()
@@ -35,15 +36,22 @@ const metaData = {
 }
 
 /** Upload */
-// await minioClient.fPutObject(bucket, destinationObject, sourceFile, metaData)
+const destinationObject = '/imgs/user_profile.jpeg'
+const sourceFile = './files/profile.jpeg'
+const fileStream = fs.createReadStream(sourceFile)
 
-// console.log('File ' + sourceFile + ' uploaded as object ' + destinationObject + ' in bucket ' + bucket)
+await minioClient.putObject(bucket, destinationObject, fileStream)
+
+console.log('File ' + sourceFile + ' uploaded as object ' + destinationObject + ' in bucket ' + bucket)
 
 /** Sign */
-const objectName = 'user_profile.jpeg'
-const expirationTime = 24 * 60 * 60 // 24 hours
-const url = await getFileLinkToS3(minioClient, bucket, objectName, expirationTime)
-console.log('url', url)
+// const objectName = 'user_profile.jpeg'
+// const expirationTime = 24 * 60 * 60 // 24 hours
+// const url = await getFileLinkToS3(minioClient, bucket, objectName, expirationTime)
+// console.log('url', url)
+
+/** Remove */
+// removeFileInS3(minioClient, bucket, objectName)
 
 
 
