@@ -1,9 +1,10 @@
-import * as Minio from 'minio'
+import { Client } from 'minio'
 import dotenv from 'dotenv'
+import { signUrl } from './utils.js'
 
 dotenv.config()
 
-const minioClient = new Minio.Client({
+const minioClient = new Client({
   endPoint: 'localhost',
   port: 9000,
   useSSL: false,
@@ -16,7 +17,9 @@ const sourceFile = './files/profile.jpeg'
 
 const bucket = 'personal-bucket'
 
-const destinationObject = 'user_profile.jpeg'
+/** Listar */
+const log = await minioClient.listBuckets()
+console.log(`Buckets disponíveis:`, log)
 
 const exists = await minioClient.bucketExists(bucket)
 
@@ -33,6 +36,18 @@ const metaData = {
   example: 5678,
 }
 
-await minioClient.fPutObject(bucket, destinationObject, sourceFile, metaData)
+const objectName = 'user_profile.jpeg'
+const expirationTime = 24 * 60 * 60 // 24 hours
+const url = await signUrl(minioClient, bucket, objectName, expirationTime)
+console.log('url', url)
 
-console.log('File ' + sourceFile + ' uploaded as object ' + destinationObject + ' in bucket ' + bucket)
+/** Upload */
+// await minioClient.fPutObject(bucket, destinationObject, sourceFile, metaData)
+
+// console.log('File ' + sourceFile + ' uploaded as object ' + destinationObject + ' in bucket ' + bucket)
+
+
+
+
+
+
