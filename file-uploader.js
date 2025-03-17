@@ -1,9 +1,10 @@
 import dotenv from 'dotenv'
 dotenv.config()
+import express from 'express'
+import multer from 'multer';
 import config from './config.js'
 import { Client } from 'minio'
-import fs from 'fs'
-
+import { createBucketIfNotExists } from './s3-utils.js'
 
 const minioClient = new Client({
   endPoint: config().s3.endPoint,
@@ -16,33 +17,54 @@ const minioClient = new Client({
 
 const bucket = config().s3.bucketName
 
-/** Listar */
 const log = await minioClient.listBuckets()
 console.log(`Buckets disponíveis:`, log)
+createBucketIfNotExists(minioClient, bucket)
 
-const exists = await minioClient.bucketExists(bucket)
+const app = express();
+const port = 3000;
 
-if (exists) {
-  console.log('Bucket ' + bucket + ' exists.')
-} else {
-  await minioClient.makeBucket(bucket, 'us-east-1')
-  console.log('Bucket ' + bucket + ' created in us-east-1.')
-}
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage })
 
-const metaData = {
-  'Content-Type': 'image/jpeg',
-  'X-Amz-Meta-Testing': 1234,
-  example: 5678,
-}
+app.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      throw new Error('Sem arquivo para upload.');
+    }
 
-/** Upload */
-const destinationObject = '/imgs/user_profile.jpeg'
-const sourceFile = './files/profile.jpeg'
-const fileStream = fs.createReadStream(sourceFile)
+    const fileName = file.originalname;
 
-await minioClient.putObject(bucket, destinationObject, fileStream)
+    const buffer = file.buffer;
+    
+    await minioClient.putObject(bucket, fileName, buffer);
+    res.status(200).send({ message: 'Upload de arquivo com sucesso' });
+  } catch (err) {
+    console.error('Erro ao fazer upload de arquivo:', err);
+    res.status(500).send({ error: 'Erro ao fazer upload de arquivo' });
+  }
+});
 
-console.log('File ' + sourceFile + ' uploaded as object ' + destinationObject + ' in bucket ' + bucket)
+app.get('/download/:filename', async (req, res) => {
+  try {
+    const fileName = req.params.filename;
+    console.log('Começando download do arquivo:', fileName);
+    
+    const stream = await minioClient.getObject(bucket, fileName);
+    console.log('stream:', stream);
+    
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+    stream.pipe(res);
+  } catch (err) {
+    console.error('Error downloading file:', err);
+    res.status(500).send({ error: 'Error downloading file' });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+})
 
 /** Sign */
 // const objectName = 'user_profile.jpeg'
