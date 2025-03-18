@@ -1,6 +1,7 @@
 
 
 export default () => ({
+  apiUrl: process.env.API_URL || 'http://localhost:3000',
   s3: {
     bucketName: process.env.S3_BUCKET_NAME,
     accessKey: process.env.S3_ACCESS_KEY,

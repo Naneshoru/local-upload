@@ -1,13 +1,18 @@
 {
   "type": "module",
+  "scripts": {
+    "start": "nodemon file-uploader.js"
+  },
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "fs": "^0.0.1-security",
     "minio": "^8.0.5",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@types/minio": "^7.1.1"
+    "@types/minio": "^7.1.1",
+    "nodemon": "^3.1.9"
   }
 }

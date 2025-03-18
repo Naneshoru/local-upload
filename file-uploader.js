@@ -5,6 +5,7 @@ import multer from 'multer';
 import config from './config.js'
 import { Client } from 'minio'
 import { createBucketIfNotExists } from './s3-utils.js'
+import { v4 as uuidv4 } from 'uuid'
 
 const minioClient = new Client({
   endPoint: config().s3.endPoint,
@@ -34,12 +35,16 @@ app.post('/upload', upload.single('file'), async (req, res) => {
       throw new Error('Sem arquivo para upload.');
     }
 
-    const fileName = file.originalname;
+    const fileExtension = file.originalname.split('.').pop()
+
+    const fileName = `${uuidv4()}.${fileExtension}`;
 
     const buffer = file.buffer;
     
     await minioClient.putObject(bucket, fileName, buffer);
-    res.status(200).send({ message: 'Upload de arquivo com sucesso' });
+    res.status(200).send({ 
+      url: `${config().apiUrl}/download/${fileName}`
+    });
   } catch (err) {
     console.error('Erro ao fazer upload de arquivo:', err);
     res.status(500).send({ error: 'Erro ao fazer upload de arquivo' });
@@ -57,13 +62,13 @@ app.get('/download/:filename', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
     stream.pipe(res);
   } catch (err) {
-    console.error('Error downloading file:', err);
-    res.status(500).send({ error: 'Error downloading file' });
+    console.error('Erro ao fazer download de arquivo:', err);
+    res.status(500).send({ error: 'Erro ao fazer download de arquivo' });
   }
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Servidor rodando em ${config().apiUrl}`);
 })
 
 /** Sign */
